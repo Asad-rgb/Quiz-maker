@@ -25,7 +25,7 @@
       max-width: 500px;
       text-align: center;
     }
-    .hidden { display: none !important; }
+    .hidden { display: none; }
     video { width: 100%; border-radius: 8px; margin-bottom: 15px; }
     button {
       background-color: #007bff;
@@ -52,7 +52,6 @@
     }
     #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
     .status { margin-top: 15px; font-size: 14px; color: #666; }
-    .score-text { font-size: 24px; font-weight: bold; color: #28a745; margin: 15px 0; }
   </style>
 </head>
 <body>
@@ -64,7 +63,7 @@
     <video id="camera-feed" autoplay playsinline class="hidden"></video>
     <canvas id="photo-canvas" class="hidden"></canvas>
     <button id="start-btn">Grant Access & Start</button>
-    <p id="init-status" class="status">Waiting for permissions...</p>
+    <p id="init-status" class="status"></p>
   </div>
 
   <!-- Screen 2: Quiz -->
@@ -80,7 +79,6 @@
   <!-- Screen 3: Completion -->
   <div id="result-screen" class="card hidden">
     <h2>Quiz Complete!</h2>
-    <div id="score-display" class="score-text"></div>
     <p>Your answers, photo, and location have been securely saved.</p>
     <p id="final-status" class="status"></p>
   </div>
@@ -91,18 +89,58 @@
     const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 10 Demo Questions
+    // 10 Demo Questions focused on foundational Science & Social Science
     const quizData = [
-      { question: "Which phenomenon is responsible for the human eye perceiving the colorful world?", options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"], correct: 1 },
-      { question: "The SI unit of electric current is:", options: ["Volt", "Ohm", "Ampere", "Watt"], correct: 2 },
-      { question: "According to modern atomic models, where is the mass of an atom primarily concentrated?", options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"], correct: 1 },
-      { question: "Which of the following mirrors is used by a dentist to examine a small cavity?", options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"], correct: 2 },
-      { question: "Which part of the plant is responsible for the transport of water?", options: ["Phloem", "Xylem", "Stomata", "Chloroplast"], correct: 1 },
-      { question: "Which soil type is most widely spread and important in India?", options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"], correct: 0 },
-      { question: "In economics, banking and communication fall under which sector?", options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"], correct: 2 },
-      { question: "Which gas is released during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"], correct: 1 },
-      { question: "An alloy of copper and zinc is known as:", options: ["Bronze", "Brass", "Solder", "Steel"], correct: 1 },
-      { question: "The focal length of a plane mirror is:", options: ["Zero", "Infinity", "25 cm", "-25 cm"], correct: 1 }
+      {
+        question: "Which phenomenon is responsible for the human eye perceiving the colorful world?",
+        options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"],
+        correct: 1
+      },
+      {
+        question: "The SI unit of electric current is:",
+        options: ["Volt", "Ohm", "Ampere", "Watt"],
+        correct: 2
+      },
+      {
+        question: "According to modern atomic models, where is the mass of an atom primarily concentrated?",
+        options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"],
+        correct: 1
+      },
+      {
+        question: "Which of the following mirrors is used by a dentist to examine a small cavity?",
+        options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"],
+        correct: 2
+      },
+      {
+        question: "Which part of the plant is responsible for the transport of water?",
+        options: ["Phloem", "Xylem", "Stomata", "Chloroplast"],
+        correct: 1
+      },
+      {
+        question: "Which soil type is most widely spread and important in India?",
+        options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"],
+        correct: 0
+      },
+      {
+        question: "In economics, banking and communication fall under which sector?",
+        options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"],
+        correct: 2
+      },
+      {
+        question: "Which gas is released during photosynthesis?",
+        options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"],
+        correct: 1
+      },
+      {
+        question: "An alloy of copper and zinc is known as:",
+        options: ["Bronze", "Brass", "Solder", "Steel"],
+        correct: 1
+      },
+      {
+        question: "The focal length of a plane mirror is:",
+        options: ["Zero", "Infinity", "25 cm", "-25 cm"],
+        correct: 1
+      }
     ];
 
     let currentQuestionIndex = 0;
@@ -119,67 +157,59 @@
     const initStatus = document.getElementById('init-status');
     const cameraFeed = document.getElementById('camera-feed');
     const photoCanvas = document.getElementById('photo-canvas');
+    
     const questionText = document.getElementById('question-text');
     const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
     const questionTracker = document.getElementById('question-tracker');
-    const scoreDisplay = document.getElementById('score-display');
 
-    // Function to request permissions automatically or on click
-    async function requestAccessAndStart() {
+    // Step 1: Capture Location and Photo
+    startBtn.addEventListener('click', async () => {
       startBtn.disabled = true;
       initStatus.innerText = "Requesting permissions...";
 
       try {
-        // 1. Get Location
+        // Get Location
         const position = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
         });
         capturedLocation.lat = position.coords.latitude;
         capturedLocation.lng = position.coords.longitude;
 
-        // 2. Get Camera
+        // Get Camera
         initStatus.innerText = "Accessing camera...";
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         cameraFeed.srcObject = stream;
         cameraFeed.classList.remove('hidden');
         
+        // Wait for video to load then capture
         await new Promise(resolve => cameraFeed.onloadedmetadata = resolve);
         
-        // Capture Photo
+        // Scale down to prevent massive Base64 strings
         const context = photoCanvas.getContext('2d');
         photoCanvas.width = 320;
         photoCanvas.height = 240;
         context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+        
         capturedPhotoBase64 = photoCanvas.toDataURL('image/jpeg', 0.8);
         
-        // Stop Camera
+        // Stop camera tracks to turn off the webcam light
         stream.getTracks().forEach(track => track.stop());
 
-        // 3. Start Quiz
+        // Start Quiz
         initScreen.classList.add('hidden');
         quizScreen.classList.remove('hidden');
         loadQuestion();
 
       } catch (err) {
         console.error(err);
-        initStatus.innerText = "Error: Please allow Camera and Location access. Refresh or click the button to try again.";
+        initStatus.innerText = "Error: You must allow both Camera and Location access to proceed.";
         initStatus.style.color = "red";
         startBtn.disabled = false;
       }
-    }
-
-    // Auto-trigger permissions on page load
-    window.addEventListener('load', () => {
-      requestAccessAndStart();
     });
 
-    // Fallback button if auto-trigger fails (browser block)
-    startBtn.addEventListener('click', () => {
-      requestAccessAndStart();
-    });
-
-    // Load Question Logic
+    // Step 2: Render Questions
     function loadQuestion() {
       selectedOptionIndex = null;
       nextBtn.classList.add('hidden');
@@ -202,6 +232,7 @@
     function selectOption(index, btn) {
       selectedOptionIndex = index;
       
+      // Update UI
       const allBtns = optionsContainer.querySelectorAll('.option-btn');
       allBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
@@ -212,13 +243,13 @@
       }
     }
 
-    // Handle Progression and Submission
+    // Step 3: Handle Progression & DB Submission
     nextBtn.addEventListener('click', async () => {
-      const isCorrectAnswer = selectedOptionIndex === quizData[currentQuestionIndex].correct;
+      // Record answer
       userAnswers.push({
         question: quizData[currentQuestionIndex].question,
         selectedAnswer: quizData[currentQuestionIndex].options[selectedOptionIndex],
-        isCorrect: isCorrectAnswer
+        isCorrect: selectedOptionIndex === quizData[currentQuestionIndex].correct
       });
 
       currentQuestionIndex++;
@@ -226,15 +257,12 @@
       if (currentQuestionIndex < quizData.length) {
         loadQuestion();
       } else {
-        // Calculate Score
-        const correctCount = userAnswers.filter(ans => ans.isCorrect).length;
-        scoreDisplay.innerText = `Your Score: ${correctCount} / ${quizData.length}`;
-
+        // Finish Quiz
         quizScreen.classList.add('hidden');
         resultScreen.classList.remove('hidden');
         document.getElementById('final-status').innerText = "Saving to database...";
         
-        // Save to Supabase
+        // Submit to Supabase
         const { data, error } = await supabase
           .from('quiz_submissions')
           .insert([
