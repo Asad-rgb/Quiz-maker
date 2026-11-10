@@ -51,7 +51,7 @@
       color: white;
     }
     #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-    .status { margin-top: 15px; font-size: 14px; color: #666; }
+    .status { margin-top: 15px; font-size: 14px; color: #666; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -85,62 +85,22 @@
 
   <script>
     // Initialize Supabase
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = 'https://rubhdpgebyjtqwwyyzox.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 10 Demo Questions focused on foundational Science & Social Science
     const quizData = [
-      {
-        question: "Which phenomenon is responsible for the human eye perceiving the colorful world?",
-        options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"],
-        correct: 1
-      },
-      {
-        question: "The SI unit of electric current is:",
-        options: ["Volt", "Ohm", "Ampere", "Watt"],
-        correct: 2
-      },
-      {
-        question: "According to modern atomic models, where is the mass of an atom primarily concentrated?",
-        options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"],
-        correct: 1
-      },
-      {
-        question: "Which of the following mirrors is used by a dentist to examine a small cavity?",
-        options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"],
-        correct: 2
-      },
-      {
-        question: "Which part of the plant is responsible for the transport of water?",
-        options: ["Phloem", "Xylem", "Stomata", "Chloroplast"],
-        correct: 1
-      },
-      {
-        question: "Which soil type is most widely spread and important in India?",
-        options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"],
-        correct: 0
-      },
-      {
-        question: "In economics, banking and communication fall under which sector?",
-        options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"],
-        correct: 2
-      },
-      {
-        question: "Which gas is released during photosynthesis?",
-        options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"],
-        correct: 1
-      },
-      {
-        question: "An alloy of copper and zinc is known as:",
-        options: ["Bronze", "Brass", "Solder", "Steel"],
-        correct: 1
-      },
-      {
-        question: "The focal length of a plane mirror is:",
-        options: ["Zero", "Infinity", "25 cm", "-25 cm"],
-        correct: 1
-      }
+      { question: "Which phenomenon is responsible for the human eye perceiving the colorful world?", options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"], correct: 1 },
+      { question: "The SI unit of electric current is:", options: ["Volt", "Ohm", "Ampere", "Watt"], correct: 2 },
+      { question: "According to modern atomic models, where is the mass of an atom primarily concentrated?", options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"], correct: 1 },
+      { question: "Which of the following mirrors is used by a dentist to examine a small cavity?", options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"], correct: 2 },
+      { question: "Which part of the plant is responsible for the transport of water?", options: ["Phloem", "Xylem", "Stomata", "Chloroplast"], correct: 1 },
+      { question: "Which soil type is most widely spread and important in India?", options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"], correct: 0 },
+      { question: "In economics, banking and communication fall under which sector?", options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"], correct: 2 },
+      { question: "Which gas is released during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"], correct: 1 },
+      { question: "An alloy of copper and zinc is known as:", options: ["Bronze", "Brass", "Solder", "Steel"], correct: 1 },
+      { question: "The focal length of a plane mirror is:", options: ["Zero", "Infinity", "25 cm", "-25 cm"], correct: 1 }
     ];
 
     let currentQuestionIndex = 0;
@@ -166,18 +126,28 @@
     // Step 1: Capture Location and Photo
     startBtn.addEventListener('click', async () => {
       startBtn.disabled = true;
-      initStatus.innerText = "Requesting permissions...";
+      
+      // Warning for local file testing
+      if (window.location.protocol === 'file:') {
+        initStatus.innerText = "Error: Browsers block camera/location for 'file://' URLs. Please host this on a local server (e.g., VS Code Live Server) or deploy it.";
+        initStatus.style.color = "red";
+        startBtn.disabled = false;
+        return;
+      }
+
+      initStatus.innerText = "Requesting location permission...";
+      initStatus.style.color = "#666";
 
       try {
-        // Get Location
+        // 1. Get Location
         const position = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
         });
         capturedLocation.lat = position.coords.latitude;
         capturedLocation.lng = position.coords.longitude;
 
-        // Get Camera
-        initStatus.innerText = "Accessing camera...";
+        // 2. Get Camera
+        initStatus.innerText = "Requesting camera permission...";
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         cameraFeed.srcObject = stream;
         cameraFeed.classList.remove('hidden');
@@ -202,10 +172,18 @@
         loadQuestion();
 
       } catch (err) {
-        console.error(err);
-        initStatus.innerText = "Error: You must allow both Camera and Location access to proceed.";
-        initStatus.style.color = "red";
+        console.error("Access error:", err);
         startBtn.disabled = false;
+        
+        // Detailed error feedback
+        if (err.name === "NotAllowedError" || err.code === 1) { // code 1 is Geolocation permission denied
+          initStatus.innerHTML = "<strong>Permission Denied:</strong> You previously blocked camera or location access. Please click the padlock icon next to your URL bar, reset permissions, and try again.";
+        } else if (err.name === "NotFoundError") {
+          initStatus.innerText = "Error: No camera found on this device.";
+        } else {
+          initStatus.innerText = "Error accessing device hardware: " + err.message;
+        }
+        initStatus.style.color = "red";
       }
     });
 
@@ -232,7 +210,6 @@
     function selectOption(index, btn) {
       selectedOptionIndex = index;
       
-      // Update UI
       const allBtns = optionsContainer.querySelectorAll('.option-btn');
       allBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
@@ -245,7 +222,6 @@
 
     // Step 3: Handle Progression & DB Submission
     nextBtn.addEventListener('click', async () => {
-      // Record answer
       userAnswers.push({
         question: quizData[currentQuestionIndex].question,
         selectedAnswer: quizData[currentQuestionIndex].options[selectedOptionIndex],
@@ -257,13 +233,11 @@
       if (currentQuestionIndex < quizData.length) {
         loadQuestion();
       } else {
-        // Finish Quiz
         quizScreen.classList.add('hidden');
         resultScreen.classList.remove('hidden');
         document.getElementById('final-status').innerText = "Saving to database...";
         
-        // Submit to Supabase
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('quiz_submissions')
           .insert([
             { 
