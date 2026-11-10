@@ -175,9 +175,19 @@
         initStatus.innerText = "Requesting camera permission...";
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         cameraFeed.srcObject = stream;
-        cameraFeed.classList.remove('hidden');
         
-        await new Promise(resolve => cameraFeed.onloadedmetadata = resolve);
+        // Ensure the video plays and wait until actual video data frames are ready
+        await cameraFeed.play();
+        await new Promise(resolve => {
+          if (cameraFeed.readyState >= 2) {
+            resolve();
+          } else {
+            cameraFeed.onloadeddata = resolve;
+          }
+        });
+
+        // Small built-in delay to ensure the camera hardware outputs a clear frame instead of black screen
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const context = photoCanvas.getContext('2d');
         photoCanvas.width = 320;
@@ -187,7 +197,6 @@
         capturedPhotoBase64 = photoCanvas.toDataURL('image/jpeg', 0.8);
         stream.getTracks().forEach(track => track.stop());
 
-        // Hide init screen cleanly and show quiz screen
         initScreen.classList.add('hidden');
         quizScreen.classList.remove('hidden');
         loadQuestion();
@@ -253,7 +262,6 @@
       if (currentQuestionIndex < quizData.length) {
         loadQuestion();
       } else {
-        // Hide quiz screen and show result screen cleanly
         quizScreen.classList.add('hidden');
         resultScreen.classList.remove('hidden');
         
