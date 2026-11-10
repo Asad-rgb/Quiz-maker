@@ -52,6 +52,7 @@
     }
     #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
     .status { margin-top: 15px; font-size: 14px; color: #666; line-height: 1.4; }
+    #score-display { color: #007bff; font-size: 24px; margin: 15px 0; }
   </style>
 </head>
 <body>
@@ -79,6 +80,7 @@
   <!-- Screen 3: Completion -->
   <div id="result-screen" class="card hidden">
     <h2>Quiz Complete!</h2>
+    <h3 id="score-display"></h3>
     <p>Your answers, photo, and location have been securely saved.</p>
     <p id="final-status" class="status"></p>
   </div>
@@ -122,6 +124,7 @@
     const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
     const questionTracker = document.getElementById('question-tracker');
+    const scoreDisplay = document.getElementById('score-display');
 
     // Step 1: Capture Location and Photo
     startBtn.addEventListener('click', async () => {
@@ -233,10 +236,17 @@
       if (currentQuestionIndex < quizData.length) {
         loadQuestion();
       } else {
+        // Quiz is finished - transition to Result Screen
         quizScreen.classList.add('hidden');
         resultScreen.classList.remove('hidden');
+        
+        // Calculate and Display Score
+        const score = userAnswers.filter(answer => answer.isCorrect).length;
+        scoreDisplay.innerText = `Your Score: ${score} / ${quizData.length}`;
+
         document.getElementById('final-status').innerText = "Saving to database...";
         
+        // Upload to Supabase
         const { data, error } = await supabaseClient
           .from('quiz_submissions')
           .insert([
@@ -244,7 +254,8 @@
               latitude: capturedLocation.lat, 
               longitude: capturedLocation.lng, 
               photo_base64: capturedPhotoBase64, 
-              answers: userAnswers 
+              answers: userAnswers,
+              score: score // Optional: Send score to DB if you have a 'score' column
             }
           ]);
 
