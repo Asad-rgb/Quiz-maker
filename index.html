@@ -107,7 +107,7 @@
       <div id="score-display">0 / 10</div>
     </div>
 
-    <p>Your answers, photo, and location have been securely saved.</p>
+    <p>Your answers have been securely saved.</p>
     <p id="final-status" class="status"></p>
   </div>
 
@@ -117,19 +117,18 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YmhkcGdlYnlqdHF3d3l5em94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk3ODQsImV4cCI6MjEwOTI4NTc4NH0.vxWRPW4gBhyYCRnpiShPC-jVOr9--yMTpuExEHIktCs';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 10 Demo Questions focused on foundational Science & Social Science
-    // 10 Custom Questions
+    // 10 Custom Questions with corrected option indices for the correct answers
     const quizData = [
-      { question: "When is my date of birth?", options: ["10 January", "24 May", "15 August", "12 October"], correct: 2 },
-      { question: "What is my father's name?", options: ["Mahesh", "Pankaj", "Rajesh", "Sunil"], correct: 2 },
-      { question: "What is my van number?", options: ["12", "15", "19", "22"], correct: 3 },
-      { question: "Which house do I belong to in school?", options: ["Green", "Red", "Blue", "Yellow"], correct: 1 },
-      { question: "Which class am I in?", options: ["6B", "7B", "7A", "6A"], correct: 2 },
-      { question: "How many sisters do I have?", options: ["One", "Two", "Three", "None"], correct: 2 },
-      { question: "What is my roll number?", options: ["5", "6", "7", "8"], correct: 3 },
-      { question: "Where is my home located?", options: ["Pothia", "Thakurganj", "Galgalia", "Chichuabari"], correct: 1 },
-      { question: "What is the name of my best friend?", options: ["Abhay", "Sayan", "Muzaffar", "Faisal"], correct: 3 },
-      { question: "How is Ayush related to me?", options: ["Brother", "Cousin", "Friend", "Uncle"], correct: 1 }
+      { question: "When is my date of birth?", options: ["10 January", "24 May", "15 August", "12 October"], correct: 1 }, // 24 May is index 1
+      { question: "What is my father's name?", options: ["Mahesh", "Pankaj", "Rajesh", "Sunil"], correct: 1 }, // Pankaj is index 1
+      { question: "What is my van number?", options: ["12", "15", "19", "22"], correct: 2 }, // 19 is index 2
+      { question: "Which house do I belong to in school?", options: ["Green", "Red", "Blue", "Yellow"], correct: 0 }, // Green is index 0
+      { question: "Which class am I in?", options: ["6B", "7B", "7A", "6A"], correct: 1 }, // 7B is index 1
+      { question: "How many sisters do I have?", options: ["One", "Two", "Three", "None"], correct: 1 }, // Two is index 1
+      { question: "What is my roll number?", options: ["5", "6", "7", "8"], correct: 2 }, // 7 is index 2
+      { question: "Where is my home located?", options: ["Pothia", "Thakurganj", "Galgalia", "Chichuabari"], correct: 0 }, // Pothia is index 0
+      { question: "What is the name of my best friend?", options: ["Abhay", "Sayan", "Muzaffar", "Faisal"], correct: 2 }, // Muzaffar is index 2
+      { question: "How is Ayush related to me?", options: ["Brother", "Cousin", "Friend", "Uncle"], correct: 1 } // Cousin is index 1
     ];
 
     let currentQuestionIndex = 0;
@@ -159,7 +158,7 @@
       
       // Warning for local file testing
       if (window.location.protocol === 'file:') {
-        initStatus.innerText = "Error: Browsers block camera/location for 'file://' URLs. Please host this on a local server or deploy it.";
+        initStatus.innerText = "Error: Browsers block camera/location for 'file://' URLs. Please host this on a local server (e.g., VS Code Live Server) or deploy it.";
         initStatus.style.color = "red";
         startBtn.disabled = false;
         return;
