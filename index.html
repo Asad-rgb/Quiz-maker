@@ -118,17 +118,18 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 10 Demo Questions focused on foundational Science & Social Science
+    // 10 Custom Questions
     const quizData = [
-      { question: "Which phenomenon is responsible for the human eye perceiving the colorful world?", options: ["Reflection", "Dispersion of light", "Total Internal Reflection", "Interference"], correct: 1 },
-      { question: "The SI unit of electric current is:", options: ["Volt", "Ohm", "Ampere", "Watt"], correct: 2 },
-      { question: "According to modern atomic models, where is the mass of an atom primarily concentrated?", options: ["In the electron cloud", "In the nucleus", "Equally distributed", "In empty space"], correct: 1 },
-      { question: "Which of the following mirrors is used by a dentist to examine a small cavity?", options: ["Convex mirror", "Plane mirror", "Concave mirror", "Any spherical mirror"], correct: 2 },
-      { question: "Which part of the plant is responsible for the transport of water?", options: ["Phloem", "Xylem", "Stomata", "Chloroplast"], correct: 1 },
-      { question: "Which soil type is most widely spread and important in India?", options: ["Alluvial soil", "Black soil", "Red soil", "Laterite soil"], correct: 0 },
-      { question: "In economics, banking and communication fall under which sector?", options: ["Primary sector", "Secondary sector", "Tertiary sector", "Quaternary sector"], correct: 2 },
-      { question: "Which gas is released during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Methane"], correct: 1 },
-      { question: "An alloy of copper and zinc is known as:", options: ["Bronze", "Brass", "Solder", "Steel"], correct: 1 },
-      { question: "The focal length of a plane mirror is:", options: ["Zero", "Infinity", "25 cm", "-25 cm"], correct: 1 }
+      { question: "When is my date of birth?", options: ["10 January", "24 May", "15 August", "12 October"], correct: 2 },
+      { question: "What is my father's name?", options: ["Mahesh", "Pankaj", "Rajesh", "Sunil"], correct: 2 },
+      { question: "What is my van number?", options: ["12", "15", "19", "22"], correct: 3 },
+      { question: "Which house do I belong to in school?", options: ["Green", "Red", "Blue", "Yellow"], correct: 1 },
+      { question: "Which class am I in?", options: ["6B", "7B", "7A", "6A"], correct: 2 },
+      { question: "How many sisters do I have?", options: ["One", "Two", "Three", "None"], correct: 2 },
+      { question: "What is my roll number?", options: ["5", "6", "7", "8"], correct: 3 },
+      { question: "Where is my home located?", options: ["Pothia", "Thakurganj", "Galgalia", "Chichuabari"], correct: 1 },
+      { question: "What is the name of my best friend?", options: ["Abhay", "Sayan", "Muzaffar", "Faisal"], correct: 3 },
+      { question: "How is Ayush related to me?", options: ["Brother", "Cousin", "Friend", "Uncle"], correct: 1 }
     ];
 
     let currentQuestionIndex = 0;
